@@ -1,0 +1,5 @@
+services:
+  bot:
+    image: test-bot-image
+    build: .
+    env_file: .env
