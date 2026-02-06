@@ -15,11 +15,7 @@ class MusicCog(commands.Cog):
         self.music_queue = {}
         self.queue_index = {}
 
-        self.YTDL_OPTIONS = {
-            'format': 'bestaudio',
-            'nonplaylist': 'True',
-            'cookies': '/app/cookies.txt'
-        }
+        self.YTDL_OPTIONS = {'format': 'bestaudio', 'nonplaylist': 'True'}
 
         self.FFMPEG_OPTIONS = {
             'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
@@ -249,14 +245,24 @@ class MusicCog(commands.Cog):
             await ctx.send("There are no songs in the queue to be played")
             self.queue_index[ctx.guild.id] = 1
 
+
     async def _add_song(self, ctx, *args):
-        song = self._extract_yt(self._search_yt(" ".join(args))[0])
-        if song is None:
-            await ctx.send("Could not download the song, "
-                           "incorrect format, try some different keywords")
-        else:
-            self.music_queue[ctx.guild.id].append(song)
-            return song
+            search_results = self._search_yt(" ".join(args))
+
+            if not search_results:
+                await ctx.send("Could not find the song. Try different keywords.")
+                return None
+
+            song = self._extract_yt(search_results[0])
+
+            if song is None:
+                await ctx.send("Could not download the song, incorrect format.")
+            else:
+                if ctx.guild.id not in self.music_queue:
+                    self.music_queue[ctx.guild.id] = []
+                    
+                self.music_queue[ctx.guild.id].append(song)
+                return song
 
     async def _leave_channel(self, guild_id):
         if self.vc[guild_id] is None:
@@ -265,3 +271,4 @@ class MusicCog(commands.Cog):
         self.vc[guild_id] = None
         self.music_queue[guild_id] = []
         self.queue_index[guild_id] = 0
+
